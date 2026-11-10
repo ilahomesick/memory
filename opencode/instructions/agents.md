@@ -2,8 +2,8 @@
 
 Before writing code, planning, or exploring — **always search the knowledge base first**.
 
-Use the **`memory-loop` MCP server's `query` tool**. It searches this project's own
-`.opencode/memories/` — past learnings, debugging discoveries, and architectural decisions from
+Use the **`memory_query`** tool. It searches this project's own
+`~/.memory-loop/memories/` — past learnings, debugging discoveries, and architectural decisions from
 previous sessions, not external documentation. Pass both line types; they answer different
 questions and neither is sufficient alone:
 
@@ -20,7 +20,7 @@ Results carry a score of `1/rank`, not a confidence — a poor match still score
 If nothing fits, re-query with different terms; raising the limit only appends a tail.
 
 **Retrieve before relying on a result.** A snippet is a lead, not evidence. Fetch what you intend to
-use with the MCP `get`/`multi_get` tool and read it. Never quote, summarise, or act on a memory you
+use with the `memory_get`/`memory_multi_get` tools and read it. Never quote, summarise, or act on a memory you
 have only seen as a snippet. A memory describes the code when it was captured, possibly on another
 branch: where the code you read disagrees, the code wins — say so, and correct the memory through
 `continuous-learning`.
@@ -68,5 +68,5 @@ paragraph for a PR description). If the "why" won't fit, describe the outcome an
 - Bad: `See learning_orm_batch_insert_memory_spike.md`
 - Good: `Batches > 500 rows trigger an ORM memory spike — chunk in 250s.`
 
-Memory-to-memory links inside `.opencode/memories/` (`Related:`, `References:`) are fine — internal
+Memory-to-memory links inside `~/.memory-loop/memories/` (`Related:`, `References:`) are fine — internal
 graph, not an external surface.

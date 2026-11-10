@@ -3,16 +3,16 @@ name: continuous-learning
 description: >
   Evaluates reusable knowledge (debugging discoveries, architectural decisions, conventions)
   from work sessions and routes it to the correct destination:
-  .opencode/memories/ for codebase knowledge, AGENTS.md for environment/tool/instance
+  ~/.memory-loop/memories/ for codebase knowledge, AGENTS.md for environment/tool/instance
   config, or skip for public documentation. Also use when the user asks to "run a
   retrospective", "extract learnings", or "save what we learned" from the current session.
 ---
 
 # Continuous Learning Skill
 
-Evaluate reusable knowledge from work sessions and route it: codebase knowledge → `<project>/.opencode/memories/`, environment/tool/instance config → suggest an `AGENTS.md` section, public documentation → skip. Suggesting `AGENTS.md` is a successful outcome, not a failure.
+Evaluate reusable knowledge from work sessions and route it: codebase knowledge → `<project>/~/.memory-loop/memories/`, environment/tool/instance config → suggest an `AGENTS.md` section, public documentation → skip. Suggesting `AGENTS.md` is a successful outcome, not a failure.
 
-> **Project root.** `<project>` is `git rev-parse --show-toplevel`, else the workspace root, else the current working directory — the order the memory plugin uses. Run every command from there and never `cd` into `.opencode/memories/`, not even inside a compound command: the memories may live in a separate git repo, so `git` would answer for the wrong one.
+> **Project root.** `<project>` is `git rev-parse --show-toplevel`, else the workspace root, else the current working directory — the order the memory plugin uses. Run every command from there and never `cd` into `~/.memory-loop/memories/`, not even inside a compound command: the memories may live in a separate git repo, so `git` would answer for the wrong one.
 
 > **Without version control.** Every git step applies only when the relevant root — the project for code claims, the memories folder for history — is under version control. Otherwise check the working tree with `grep`/`glob`, skip `Pending:` handling, and say which you did. Without VCS the working tree is the only state, so a claim missing there is wrong, not pending.
 
@@ -76,7 +76,7 @@ Before the final reply of a turn that produced a candidate, evaluate it in two s
 **Always search the memory index first** (semantic search across this project's memories):
 
 ```
-memory-loop MCP query tool:
+memory_query:
   searches: [{type: "lex", query: "<terms expected verbatim>"},
              {type: "vec", query: "<topic, in prose>"}],
   intent: "<what you want, and what you don't>", rerank: false, limit: 6
@@ -85,10 +85,10 @@ memory-loop MCP query tool:
 **Fall back to file listing** if the search returns no results or the index is not yet built:
 
 ```
-glob(pattern: ".opencode/memories/*.md")
+glob(pattern: "~/.memory-loop/memories/*.md")
 ```
 
-**Read the candidates with the memory-loop MCP get tool before deciding.** Result snippets are capped
+**Read the candidates with memory_get before deciding.** Result snippets are capped
 at 300 characters and often show only a document's title, so a merge-or-skip call made from them
 is a guess — and the cost of guessing wrong is a duplicate memory or a lost refinement.
 
@@ -125,7 +125,7 @@ When a memory genuinely applies to multiple projects, list them comma-separated 
 
 #### Mandatory pre-`write` checks
 
-Run these checks before any `write` to `<project>/.opencode/memories/`, and on the added text before any `edit` (for a correction, see **Update existing**), and print the results as one block. Hidden reasoning is easy to skip; printed output is reviewable.
+Run these checks before any `write` to `<project>/~/.memory-loop/memories/`, and on the added text before any `edit` (for a correction, see **Update existing**), and print the results as one block. Hidden reasoning is easy to skip; printed output is reviewable.
 
 ```
 Drives: <what a future session does differently>     (new memories and corrections)
@@ -161,7 +161,7 @@ Under version control, verify the memory's central claim against the default bra
 
 **Save (only after Checks 1–3 pass and the block is printed):**
 ```
-write(file_path: "<project>/.opencode/memories/<category>_<topic>_<specific>.md", content: "<structured markdown>")
+write(file_path: "<project>/~/.memory-loop/memories/<category>_<topic>_<specific>.md", content: "<structured markdown>")
 ```
 
 **Update existing:**
@@ -174,7 +174,7 @@ write(file_path: "<project>/.opencode/memories/<category>_<topic>_<specific>.md"
 5. After a scripted or multi-part edit, re-read the whole file to catch a broken splice.
 
 ```
-edit(file_path: "<project>/.opencode/memories/<existing_name>.md", old_string: "<section to update>", new_string: "<updated section>")
+edit(file_path: "<project>/~/.memory-loop/memories/<existing_name>.md", old_string: "<section to update>", new_string: "<updated section>")
 ```
 
 ---

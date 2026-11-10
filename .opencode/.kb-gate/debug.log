@@ -1,0 +1,6 @@
+2026-11-10T11:56:17.171Z memory-loop ready (mode=enforce, root=/Users/ilariosalatino/dev/opencode-memory-loop)
+2026-11-10T11:56:24.063Z evaluate action=edit resources=["test_permission.txt"]
+2026-11-10T11:56:25.724Z evaluate action=read resources=["test_permission.txt"]
+2026-11-10T11:57:05.746Z evaluate action=edit resources=[".opencode/memories/learning_new.md"]
+2026-11-10T11:57:08.354Z evaluate action=shell resources=["ls -la .opencode/memories/ 2>&1","head -30"]
+2026-11-10T11:57:57.331Z memory-loop ready (mode=enforce, root=/Users/ilariosalatino/dev/opencode-memory-loop)

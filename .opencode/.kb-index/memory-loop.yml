@@ -1,0 +1,11 @@
+collections:
+  memories:
+    path: '/Users/ilariosalatino/dev/opencode-memory-loop/.opencode/memories'
+    pattern: "**/*.md"
+models:
+  embed: hf:Qwen/Qwen3-Embedding-0.6B-GGUF/Qwen3-Embedding-0.6B-Q8_0.gguf
+  generate: hf:Qwen/Qwen3-Embedding-0.6B-GGUF/Qwen3-Embedding-0.6B-Q8_0.gguf
+  rerank: hf:Qwen/Qwen3-Embedding-0.6B-GGUF/Qwen3-Embedding-0.6B-Q8_0.gguf
+global_context: |
+  Project memory KB: this project's own past learnings, decisions and debugging
+  discoveries — not external documentation.

@@ -1,7 +1,7 @@
 ---
 name: memory-audit
 description: >
-  Review and audit memory files in .opencode/memories/ to keep the knowledge base lean and valuable.
+  Review and audit memory files in ~/.memory-loop/memories/ to keep the knowledge base lean and valuable.
   Use this skill when the user says "audit memories", "review memories", "clean up memories",
   "memory audit", "check my memories", or wants to prune, deduplicate, or assess the quality
   of their stored learnings and decisions. This is a manual-only skill — never trigger automatically.
@@ -9,7 +9,7 @@ description: >
 
 # Memory Audit Skill
 
-Audit the knowledge base in `<project>/.opencode/memories/` to keep it lean, relevant, and high-quality. `<project>` is the project root: `git rev-parse --show-toplevel`, else the workspace root, else the current working directory — the same order the memory plugin uses. The skill walks through every memory with the user, recommending **KEEP**, **DROP**, or **UPDATE** with clear rationale, and only acts on user-approved changes. **DROP is not a failure** — deleting a memory that does not qualify (or that belongs in `AGENTS.md`, in a planning doc, or in the tool's own docs) is the audit doing its job.
+Audit the knowledge base in `<project>/~/.memory-loop/memories/` to keep it lean, relevant, and high-quality. `<project>` is the project root: `git rev-parse --show-toplevel`, else the workspace root, else the current working directory — the same order the memory plugin uses. The skill walks through every memory with the user, recommending **KEEP**, **DROP**, or **UPDATE** with clear rationale, and only acts on user-approved changes. **DROP is not a failure** — deleting a memory that does not qualify (or that belongs in `AGENTS.md`, in a planning doc, or in the tool's own docs) is the audit doing its job.
 
 > **This skill is user-initiated only.** Never run it automatically or as part of another workflow.
 
@@ -38,7 +38,7 @@ Every memory must satisfy all three rules.
 When a memory genuinely applies to multiple projects, list them comma-separated (e.g. `**Applies to:** web-dashboard, ios-app, api-backend`); the content must stay true in every listed project. When a memory is only partially relevant to one listed project, split it into separate memories instead of mixing.
 <!-- /SYNC -->
 
-**Audit-time usage.** Audit the memories in the current checkout's `.opencode/memories/`, whatever their `Applies to:` says. Fact-check code claims against this project; judge a claim about another project by Capture Rule 1 — whether it changes work here, and the code or `References:` doc behind it — not by grepping here. Compare `Applies to:` against the **git repo name**, not the directory basename — a folder rename does not change the project. Never DROP a memory solely because its `Applies to:` lists other projects.
+**Audit-time usage.** Audit the memories in the current checkout's `~/.memory-loop/memories/`, whatever their `Applies to:` says. Fact-check code claims against this project; judge a claim about another project by Capture Rule 1 — whether it changes work here, and the code or `References:` doc behind it — not by grepping here. Compare `Applies to:` against the **git repo name**, not the directory basename — a folder rename does not change the project. Never DROP a memory solely because its `Applies to:` lists other projects.
 
 ---
 
@@ -139,18 +139,18 @@ The rows below are the recurring shapes of Capture Rule and forcing-function fai
 
 > **Per-batch consent is mandatory.** Each batch is its own approval cycle: verdict table, stop, the user's decisions, execution, summary — never chain batches. Step 3 holds the hard-stop rules.
 
-> **Stay at project root.** Do not `cd` into `.opencode/memories/` (or any subdirectory) at any point during the audit, not even inside a compound command. Codebase fact-checks (`grep`/`glob`/`bash`) need cwd at the project root — running them from inside `.opencode/memories/` resolves patterns against memory files instead of project source, silently passing fact-checks that should fail. Reference memory files by full path (e.g. `.opencode/memories/<file>.md`).
+> **Stay at project root.** Do not `cd` into `~/.memory-loop/memories/` (or any subdirectory) at any point during the audit, not even inside a compound command. Codebase fact-checks (`grep`/`glob`/`bash`) need cwd at the project root — running them from inside `~/.memory-loop/memories/` resolves patterns against memory files instead of project source, silently passing fact-checks that should fail. Reference memory files by full path (e.g. `~/.memory-loop/memories/<file>.md`).
 
 > **Verdicts are not delegated.** Sub-agents may gather facts for a batch — each memory's claims marked found, missing, or contradicted, with evidence — but never KEEP/UPDATE/DROP, a category, or a rationale; say so in their prompt. Read every memory yourself and reach each verdict here: a verdict handed over in writing anchors whoever reviews it.
 
-> **Scope.** Default scope is every memory in `<project>/.opencode/memories/`. The user may scope narrower: by category (`learning_*` only), by age (older than N months), or by `Applies to:` (only memories tagging this repo). Honor the requested scope; report the count covered vs. total. To scope by author or date, find the memories' own git root with `git -C .opencode/memories rev-parse --show-toplevel` and run `git -C <root> log` there — it may differ from the project's.
+> **Scope.** Default scope is every memory in `<project>/~/.memory-loop/memories/`. The user may scope narrower: by category (`learning_*` only), by age (older than N months), or by `Applies to:` (only memories tagging this repo). Honor the requested scope; report the count covered vs. total. To scope by author or date, find the memories' own git root with `git -C ~/.memory-loop/memories rev-parse --show-toplevel` and run `git -C <root> log` there — it may differ from the project's.
 
 ### Step 1: Inventory
 
 List all memory files in the project:
 
 ```
-glob(pattern: "<project>/.opencode/memories/*.md")
+glob(pattern: "<project>/~/.memory-loop/memories/*.md")
 ```
 
 If the directory is missing or empty, report the situation (specify whether it doesn't exist or is just empty) and exit — do not create the directory. If it has files, report the total count and a breakdown by category (learnings vs decisions vs non-standard naming).
