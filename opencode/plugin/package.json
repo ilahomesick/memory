@@ -1,0 +1,10 @@
+{
+  "name": "memory-loop-opencode",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenCode V2 port of The Memory Loop (full parity)",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

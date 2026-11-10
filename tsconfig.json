@@ -13,5 +13,5 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["hooks/**/*.mts", "scripts/**/*.mts", "tests/**/*.mts"]
+  "include": ["hooks/**/*.mts", "scripts/**/*.mts", "tests/**/*.mts", "opencode/plugin/**/*.ts"]
 }
