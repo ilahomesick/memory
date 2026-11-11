@@ -57,5 +57,25 @@ original Claude Code pack at the repo root for reference/upstream sync.
 3. **Plugin: kb-gate** (hard): turn stamps, spawn/write/edit/bash checks, modes, budgets, compaction mark.
 4. **Installer + docs + end-to-end verification.**
 
+## Knowledge sources & writability
+
+The index holds several qmd collections:
+
+- **`memories`** — the writable capture store (`~/.memory-loop/memories`), protected by the memory
+  skills (the gate denies writes without `continuous-learning`/`memory-audit`).
+- **`second-brain`** — `~/second-brain`, indexed **in place**.
+- **`runbooks`** — `~/.memory-loop/knowledge/runbooks/` (symlinks to standalone runbooks/handbooks).
+
+Extra collections are declared in `~/.memory-loop/collections.json`:
+
+```json
+{ "collections": { "second-brain": { "path": "~/second-brain", "pattern": "**/*.md" } } }
+```
+
+They are **ordinary writable files**: editing them is allowed (the gate only protects `memories/`),
+and the plugin reindexes the whole index on session start and on each prompt. A debounced file
+watcher is planned so edits to indexed sources are picked up without waiting for the next prompt.
+
+
 State files keep the pack's formats (monotonic turn counter, append-only query/denial files,
 `.usage.tsv`) so behavior is comparable.
