@@ -1,72 +1,49 @@
-## MANDATORY — Before Starting Any Task
+## The memory-loop KB — system map
 
-Before writing code, planning, or exploring — **always search the knowledge base first**.
+- **Contents.** `~/.memory-loop/memories/` (captured learnings) **plus** indexed sources:
+  `~/second-brain` and `~/.memory-loop/knowledge/runbooks`. One index, one search. Only
+  `memories/` is write-gated; the others are ordinary files — edit them freely.
+- **Tools.** `memory_query` (hybrid BM25 + vector; typed `lex`/`vec`), `memory_get` (one document
+  by `#docid` or path), `memory_multi_get` (glob or comma list).
+- **Enforced.** The first productive tool call of a turn is denied until `memory_query` has run —
+  search before you act. Writes to `memories/` need `continuous-learning` or `memory-audit` this
+  turn; bash writes there are denied.
+- **Automatic.** ~4 idle minutes after a session, a capture pass writes up to 3 memories through
+  `continuous-learning`. Nothing is injected into your prompt: the KB reaches you only through the
+  tools you call.
+- **Freshness.** A watcher reindexes on file change (~30 s).
+- **If the KB has nothing:** say so and continue. Never stretch a weak hit to look useful.
 
-Use the **`memory_query`** tool. It searches this project's own
-`~/.memory-loop/memories/` — past learnings, debugging discoveries, and architectural decisions from
-previous sessions, not external documentation. Pass both line types; they answer different
-questions and neither is sufficient alone:
+## Before any task: search first
 
-- `lex` — keywords you expect **verbatim** in the target memory: identifiers, error names,
-  `"quoted phrases"`, `-negation`. It is the only thing that finds a rare exact token and it selects
-  the snippet you get back.
-- `vec` — prose: the question as you would ask a colleague. It finds a memory that describes your
-  symptom in different words.
-- `intent` — what you are looking for **and what to avoid**.
+Call `memory_query` before writing code, planning, or exploring. Pass both line types — neither
+alone is sufficient:
 
-Pass both as separate searches, `rerank: false`, limit ~6.
+- `lex` — keywords you expect **verbatim**: identifiers, error names, `"quoted phrases"`,
+  `-negation`. The only thing that finds a rare exact token, and it selects which snippet you get.
+- `vec` — the question in prose, as you would ask a colleague. Finds a memory worded differently.
+- `intent` — what you want **and what to avoid**.
 
-Results carry a score of `1/rank`, not a confidence — a poor match still scores 1.00 at the top.
-If nothing fits, re-query with different terms; raising the limit only appends a tail.
+Use `rerank: false`, limit ~6. Scores are `1/rank`, not confidence — a poor match still scores 1.00
+at the top. If nothing fits, re-query with different terms; a higher limit only appends a tail.
 
-**Retrieve before relying on a result.** A snippet is a lead, not evidence. Fetch what you intend to
-use with the `memory_get`/`memory_multi_get` tools and read it. Never quote, summarise, or act on a memory you
-have only seen as a snippet. A memory describes the code when it was captured, possibly on another
-branch: where the code you read disagrees, the code wins — say so, and correct the memory through
-`continuous-learning`.
+**A snippet is a lead, not evidence.** Open what you intend to use with `memory_get` /
+`memory_multi_get`. Where a memory and the code disagree, the code wins — say so, and correct the
+memory through `continuous-learning`.
 
-### When to re-check mid-session
+Search again when the work changes phase: a new failure to debug, tests, refactoring, error
+handling, CI/deploy, a new integration.
 
-Search again **before starting** whenever the work shifts to a new phase, including:
-- **Debugging an unexpected failure** — search by topic/domain, not the literal error message.
-- **Writing or updating tests** — check testing conventions/patterns/frameworks.
-- **Refactoring** — check architectural decisions and code-style preferences.
-- **Error-handling / validation** — check established patterns.
-- **CI/CD or deployment** — check workflow decisions.
-- **New integration** — check networking/data-layer conventions.
+## Delegation
 
-### Delegation barrier
+A KB result is an *input* to a sub-agent prompt, so never spawn before reading it. Every sub-agent
+prompt opens with `KB context: <1-5 bullets>` or `KB context: none relevant.`
+If the KB already names the files, read them yourself — the cheapest agent is none. Fanning out to
+3+? Write the findings to a scratchpad once and pass `KB context: see <path>`.
 
-The KB query and any sub-agent spawn are **not** independent calls — the KB result is an *input* to
-the sub-agent's prompt. Never place them in the same message, and never spawn a sub-agent before you
-have read the KB results.
+## Referencing memories
 
-Every sub-agent prompt that reads or searches this codebase must open with:
-
-```
-KB context: <1-5 bullets — file paths, patterns, gotchas, decisions from the KB>
-```
-
-or the literal line `KB context: none relevant.`
-
-Two rules that save the most work:
-- **If the KB already names the files, read them directly.** Do not spawn an agent to re-find what a
-  memory already told you. The cheapest outcome is no agent at all.
-- **Fanning out to 3+ agents?** Write the findings once to a scratchpad file and point each agent at
-  it — but keep the opener, as `KB context: see <path>`.
-
-## Referencing memories in shared artifacts
-
-Memory files are a project-internal KB — filenames drift, and not all readers have repo access.
-**Never cite memory filenames** in commits, PR descriptions, issue trackers, chat, code comments,
-docstrings, or release notes.
-
-**Summarize the conclusion, don't paste it.** Give the reader the one sentence they need — the
-trigger, constraint, or choice — sized to the artifact (one line for a commit or code comment; one
-paragraph for a PR description). If the "why" won't fit, describe the outcome and skip it.
-
-- Bad: `See learning_orm_batch_insert_memory_spike.md`
-- Good: `Batches > 500 rows trigger an ORM memory spike — chunk in 250s.`
-
-Memory-to-memory links inside `~/.memory-loop/memories/` (`Related:`, `References:`) are fine — internal
-graph, not an external surface.
+Never cite memory filenames in commits, PRs, issues, chat, code comments or release notes — they
+drift and outside readers cannot open them. Give the one-sentence conclusion instead:
+`Batches > 500 rows trigger an ORM memory spike — chunk in 250s.`
+`Related:` / `References:` links *between* memories are fine — internal graph, not a public surface.
