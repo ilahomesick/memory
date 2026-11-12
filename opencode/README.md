@@ -27,13 +27,14 @@ index via `QMD_CONFIG_DIR` / `INDEX_PATH`.
 The pack's original design is agent-invoked: tools exist, a rule says to use them,
 and nothing *makes* it happen. Two plugin paths remove that reliance:
 
-- **Automatic recall (every turn).** On `prompt`, the plugin reduces the message to
-  keywords (stopwords and question scaffolding stripped), runs a BM25 search, takes
-  the top 3 hits and appends them to the prompt as
-  `<memory-loop-context>…</memory-loop-context>` before the model sees it.
-  ~400 ms; documents already injected in the session are skipped; short prompts,
-  slash commands and the capture pass are excluded. BM25 is used rather than
-  `qmd query` because hybrid retrieval costs ~8–9 s per turn.
+- **KB-first retrieval (default).** No context is injected into the prompt. Instead the
+  first *productive* tool call of a turn (anything but `memory_*`, `skill`, `todowrite`,
+  `question`) is denied once until `memory_query` has run, with a message telling the model
+  to search typed `lex`/`vec` queries and continue if nothing applies. So the model
+  searches before acting — its own query, its own reading of relevance — instead of being
+  fed keyword guesses. One denial per turn, so a deliberate retry still works.
+  Alternative: `touch ~/.memory-loop/.recall-inject` (or `MEMORY_LOOP_RECALL=inject`) turns
+  on the older BM25 pre-injection; `MEMORY_LOOP_RECALL=off` disables both.
 - **Automatic capture (idle).** On `session.execution.succeeded` the plugin debounces
   4 minutes, then exports the session, builds a transcript digest, and runs one
   headless pass (`opencode run --archived --auto`) that loads `continuous-learning`

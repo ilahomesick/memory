@@ -47,6 +47,18 @@ const MODE = (
   process.env.MEMORY_LOOP_MODE ?? (existsSync(join(homedir(), '.memory-loop', '.gate-off')) ? 'off' : 'enforce')
 ).toLowerCase() as 'enforce' | 'warn' | 'observe' | 'off';
 
+/**
+ * Recall policy:
+ *   kb-first (default) — inject nothing; the first productive tool call of a
+ *     turn is denied until `memory_query` has run, so the model searches before
+ *     acting instead of being fed guessed context.
+ *   inject — the older behaviour: BM25 top-3 appended to every prompt.
+ *   off — neither.
+ */
+const RECALL = (
+  process.env.MEMORY_LOOP_RECALL ?? (existsSync(join(homedir(), '.memory-loop', '.recall-inject')) ? 'inject' : 'kb-first')
+).toLowerCase();
+
 type Search = { turn: number; text: string };
 type SkillUse = { turn: number; name: string };
 type State = {
@@ -55,6 +67,8 @@ type State = {
   skills: SkillUse[];
   denialsThisTurn: number;
   injected?: string[];
+  kbGateTurn?: number;
+  capturePass?: boolean;
 };
 
 function ensureDirs() {
@@ -172,6 +186,23 @@ function isReadOnlyShell(cmd: string): boolean {
   }
   for (const s of touching) if (!isReadOnlySegment(s)) return false;
   return true;
+}
+
+const NON_PRODUCTIVE = new Set([
+  'skill',
+  'todowrite',
+  'todo_write',
+  'question',
+  'task_status',
+  'task_reply',
+  'task_cancel',
+]);
+
+/** Tools that do real work on the user's machine; the KB check runs before these. */
+function isProductiveTool(name: string): boolean {
+  const n = name.toLowerCase();
+  if (n.includes('memory')) return false;
+  return !NON_PRODUCTIVE.has(n);
 }
 
 function detectSkill(text: string): string | null {
@@ -733,10 +764,13 @@ export default {
         }
         const skill = detectSkill(text);
         if (skill) s.skills.push({ turn: s.turn, name: skill });
+        s.capturePass = text.startsWith(CAPTURE_SENTINEL);
 
-        // Automatic recall: prepend fast BM25 hits so every turn starts with
-        // whatever the KB already knows. The capture pass is excluded.
-        if (!text.startsWith(CAPTURE_SENTINEL)) {
+        // Recall policy. `kb-first` (default) injects nothing and instead makes
+        // the first productive tool call of the turn require a KB search — the
+        // same shape as Claude Code, where the model searches before acting.
+        // `inject` keeps the older BM25 pre-injection for experimentation.
+        if (RECALL === 'inject' && !text.startsWith(CAPTURE_SENTINEL)) {
           const seen = new Set(s.injected ?? []);
           const recall = await autoContext(text, seen);
           if (recall) {
@@ -841,6 +875,25 @@ export default {
             deny(s, event, 'Memory files are changed only via edit/write under a memory skill; bash writes are denied.');
             return;
           }
+        }
+
+        // KB-first: search before acting, the way a careful agent does on its
+        // own. One denial per turn, so a deliberate retry is still possible.
+        if (
+          RECALL === 'kb-first' &&
+          !s.capturePass &&
+          isProductiveTool(action) &&
+          !kbSearchedThisTurn(s) &&
+          s.kbGateTurn !== s.turn
+        ) {
+          s.kbGateTurn = s.turn;
+          setState(sid, s);
+          deny(
+            s,
+            event,
+            'KB first: call memory_query (1-3 typed searches — lex for exact tokens, vec for the question) before other tools. If nothing applies, say so and continue.',
+          );
+          return;
         }
 
         if (action.includes('task') || action.includes('agent') || action.includes('spawn')) {
